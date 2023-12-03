@@ -1,14 +1,14 @@
 import scala.io.Source
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
+import common.file.readFileLines
 
 @main def run(filePath: String): Unit = {
   println(processFile(filePath).sum)
 }
 
 def processFile(filePath: String) = {
-  val fileContents = Source.fromFile(filePath).getLines().toArray
-  fileContents
+  readFileLines(filePath)
     .map(extractFirstLast)
     .map(firstLastToInt)
 }
