@@ -3,15 +3,15 @@ import scala.util.matching.Regex.Match
 import scala.collection.immutable.NumericRange.Inclusive
 
 @main def main(inputFile: String) = {
-  // println(f"Part 1: ${part1(readFile(inputFile))}")
+  println(f"Part 1: ${part1(readFile(inputFile))}")
   println(f"Part 2: ${part2(readFile(inputFile))}")
 }
 
 def part1(input: String) = {
   val splitInput = input.split("\n")
-  val seeds: Iterator[BigInt] =
+  val seeds: Iterator[Long] =
     for numberMatch <- raw"\d+".r.findAllMatchIn(splitInput(0))
-    yield BigInt(numberMatch.matched)
+    yield numberMatch.matched.toLong
 
   val seedToSoil = doMapping(
     splitInput
@@ -68,7 +68,7 @@ def part1(input: String) = {
   locations.min
 }
 
-def doMapping(lines: Array[String]): Array[(BigInt, BigInt, BigInt)] = {
+def doMapping(lines: Array[String]): Array[(Long, Long, Long)] = {
   val mappingRegex = raw"(\d+) (\d+) (\d+)".r
   for
     line <- lines
@@ -76,31 +76,31 @@ def doMapping(lines: Array[String]): Array[(BigInt, BigInt, BigInt)] = {
       .findFirstMatchIn(line)
       .map((aMatch) =>
         (
-          BigInt(aMatch.group(1)),
-          BigInt(aMatch.group(2)),
-          BigInt(aMatch.group(3))
+          aMatch.group(1).toLong,
+          aMatch.group(2).toLong,
+          aMatch.group(3).toLong
         )
       )
     diff = mappings._2 - mappings._1
-  // yield (mappings._2.to(mappings._2 + mappings._3) -> diff)
   yield (mappings._2, mappings._2 + mappings._3, diff)
 }
 
 def getDiff(
-    mapping: Array[(BigInt, BigInt, BigInt)],
-    needle: BigInt
-): BigInt = mapping
-  .find((start, end, _) => start <= needle && end >= needle)
-  .getOrElse((0, 0, BigInt(0)))
-  ._3
+    mapping: Array[(Long, Long, Long)],
+    needle: Long
+): Long = {
+  val idx =
+    mapping.indexWhere((start, end, _) => start <= needle && end >= needle)
+  if (idx != -1) mapping(idx)._3 else 0L
+}
 
 def part2(input: String) = {
   val splitInput = input.split("\n")
-  val seeds: Iterator[Inclusive[BigInt]] =
+  val seeds: Iterator[Inclusive[Long]] =
     for
       seedMatch <- raw"(\d+) (\d+)".r.findAllMatchIn(splitInput(0))
-      start = BigInt(seedMatch.group(1))
-      end = start + BigInt(seedMatch.group(2))
+      start = seedMatch.group(1).toLong
+      end = start + seedMatch.group(2).toLong
     yield start to end
 
   val seedToSoil = doMapping(
@@ -145,10 +145,11 @@ def part2(input: String) = {
       .takeWhile(_ != "")
   )
 
-  var smallest: Option[BigInt] = None
+  var smallest: Option[Long] = None
   for
     seedRange <- seeds
-    seed <- seedRange
+    sr <- seedRange.grouped(1000)
+    seed <- sr
     soil = seed - getDiff(seedToSoil, seed)
     fertilizer = soil - getDiff(soilToFertilizer, soil)
     water = fertilizer - getDiff(fertilizerToWater, fertilizer)
